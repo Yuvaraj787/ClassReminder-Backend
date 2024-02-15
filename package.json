@@ -1,0 +1,21 @@
+{
+  "name": "classreminder-backend",
+  "version": "1.0.0",
+  "description": "Backend repository for class reminder",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "collegeProject"
+  ],
+  "author": "Yuvaraj V, DhanushKumar S",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "mongoose": "^8.1.2"
+  }
+}
