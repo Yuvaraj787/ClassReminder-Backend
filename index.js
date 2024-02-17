@@ -15,6 +15,10 @@ app.use("/auth", AuthRoutes)
 //     res.
 // })
 
+app.get("/shi", (req,res) => {
+    console.log("ok");
+    res.send({ok : true});
+})
 
 app.listen(port, () => {
     console.log("Server is listening on port : " + port)

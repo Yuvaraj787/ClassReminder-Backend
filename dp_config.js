@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const url = "mongodb+srv://yuvarajv787:test123@cluster0.qmwbm47.mongodb.net/?retryWrites=true&w=majority"
 
-mongoose.connect(url, {useNewUrlParser: true})
+mongoose.connect(url)
 
 const conn = mongoose.connection;
 
