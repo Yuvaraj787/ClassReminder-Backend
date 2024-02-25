@@ -4,6 +4,23 @@ import { User, Course } from "./models.js"
 
 const router = Router()
 
+router.post("/getStaff", async (req, res) => {
+    const courseCode = "IT5613" || req.query.courseCode;
+
+    const staffs = await Course.find({
+        courseCode  
+    })
+
+    var TargetStaffs = [];
+
+    staffs.forEach(staff => {
+        TargetStaffs.push(staff.staff)
+    })
+
+    res.json(TargetStaffs)
+
+})
+
 router.post("/enrollCourse", async (req, res) => {
     const roll_no = 2021115125 || req.roll;
     const courseCode = "IT5611" || req.query.courseCode;
@@ -18,6 +35,7 @@ router.post("/enrollCourse", async (req, res) => {
                 coursesEnrolled: courseNo.courseNo
             }
         })
+
         console.log(result);
         res.json({
             success: true
@@ -36,7 +54,8 @@ router.get("/getMyCourses", async (req, res) => {
         const roll_no = 2021115125 || req.roll;
         const courses = await User.findOne({
             roll: roll_no
-        }).exec();
+        })
+        console.log(courses)
         var userCourses = [];
 
         courses.coursesEnrolled.forEach(element => {
@@ -44,13 +63,16 @@ router.get("/getMyCourses", async (req, res) => {
         });
 
         var courseNames = await Course.find({
-            $in: userCourses
+            courseNo : {
+                $in : userCourses
+            }
         })
 
-        res.json(courseNames)
+        res.json(courseNames) 
     } catch (Err) {
         console.log("Error in fetching user courses ", Err.message)
     }
 })
+
 
 export default router;
