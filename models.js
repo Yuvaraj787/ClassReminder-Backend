@@ -18,7 +18,13 @@ var courseScheme = mongoose.Schema({
     staff : String
 })
 
+var scheduleSchema = mongoose.Schema({
+    courseNo : Number,
+    hours : Object
+})
+
 var User = mongoose.model("users", userSchema)
 var Course = mongoose.model("courses", courseScheme)
+var Schedule = mongoose.model("schedules", scheduleSchema)
 
-export { User, Course }
+export { User, Course, Schedule }

@@ -1,8 +1,46 @@
 import { Router } from 'express';
 import middleware from "./middleware.js"
-import { User, Course } from "./models.js"
+import { User, Course, Schedule } from "./models.js"
 
 const router = Router()
+
+router.get("/getAllCourses",    async (req,res) => {
+    var sem = 6 || req.query.sem
+    var courses = await Course.find({sem});
+    res.send(courses)
+})
+
+// INPUT NEEDED : SEM
+// SAMPLE OUTPUT / RESPONSE (LIST OF ALL COURSES)
+// [
+//     {
+//       "_id": "65d9ef5d98f6c2044485a9e4",
+//       "sem": 6,
+//       "courseNo": 2,
+//       "name": "Data Science and Analytics Laboratory",
+//       "staff": "Vidhya",
+//       "courseCode": "IT5611",
+//       "type": "Lab"
+//     },
+//     {
+//       "_id": "65d9ef5d98f6c2044485a9e5",
+//       "sem": 6,
+//       "courseNo": 3,
+//       "name": "Social Network Analysis",
+//       "staff": "Mala",
+//       "courseCode": "IT5020",
+//       "type": "Theory"
+//     },
+//     {
+//       "_id": "65d9ef5d98f6c2044485a9e6",
+//       "sem": 6,
+//       "courseNo": 4,
+//       "name": "Distributed Systems and Cloud Computing",
+//       "staff": "Swaminathan",
+//       "courseCode": "IT5603",
+//       "type": "Theory"
+//     },
+// ]
 
 router.post("/getStaff", async (req, res) => {
     const courseCode = "IT5613" || req.query.courseCode;
@@ -16,10 +54,15 @@ router.post("/getStaff", async (req, res) => {
     staffs.forEach(staff => {
         TargetStaffs.push(staff.staff)
     })
-
     res.json(TargetStaffs)
-
 })
+
+// INPUT NEEDED : COURSE_CODE
+// SAMPLE OUTPUT / RESPONSE
+// [
+//     "Jasmine",
+//     "Geetha"
+// ]
 
 router.post("/enrollCourse", async (req, res) => {
     const roll_no = 2021115125 || req.roll;
@@ -48,6 +91,12 @@ router.post("/enrollCourse", async (req, res) => {
     }
 })
 
+// INPUT NEEDED : ROLL, COURSE-CODE, FACULTY-NAME (WHICH IS OBTAINED BY ABOVE ROUTE)
+// SAMPLE OUTPUT / RESPONSE
+// {
+//     "success": true
+//  }
+
 
 router.get("/getMyCourses", async (req, res) => {
     try {
@@ -73,6 +122,151 @@ router.get("/getMyCourses", async (req, res) => {
         console.log("Error in fetching user courses ", Err.message)
     }
 })
+// INPUT NEEDED : ROLL
+// SAMPLE OUTPUT / RESPONSE
+// [
+//     {
+//       "_id": "65d9ef5d98f6c2044485a9e3",
+//       "sem": 6,
+//       "courseNo": 1,
+//       "name": "Data Science and Analytics Laboratory",
+//       "staff": "Bama",
+//       "courseCode": "IT5611",
+//       "type": "Lab"
+//     },
+//     {
+//       "_id": "65d9ef5d98f6c2044485a9e9",
+//       "sem": 6,
+//       "courseNo": 7,
+//       "name": "Data Science and Analytics Theory",
+//       "staff": "Sendhil Kumar",
+//       "courseCode": "IT5602",
+//       "type": "Theory"
+//     }
+//   ]
 
+const courseNoToName = (courses,courseNo) => {
+    console.log("Input got : ", courses, courseNo)
+    var found = false;
+    var obj;
+    courses.every(course => {
+        if (course.courseNo == courseNo) {
+            console.log("Found")
+            found = true
+            obj = course
+            return false;
+        }
+        return true;
+    })
+    if (found) {
+        console.log("found")
+        return obj
+    }
+    console.log("not found")
+    return -1;
+}
+
+router.get("/weeklyCourses", async (req, res) => {
+    
+    var schedule = {
+        monday : [],
+        tuesday : [],
+        wednesday : [],
+        thursday : [],
+        friday : []
+    }
+
+    try {
+        const roll_no = 2021115125 || req.roll;
+        const courses = await User.findOne({
+            roll: roll_no
+        })
+
+        
+        var userCourses = [];
+
+        courses.coursesEnrolled.forEach(element => {
+            userCourses.push(element[0])
+        });
+
+        var courseNames = await Course.find({
+            courseNo : {
+                $in : userCourses
+            }
+        })
+
+
+        var schedules = await Schedule.find({
+            courseNo : {
+                $in : userCourses
+            }
+        })
+
+        schedules.forEach(sch => {
+            var days = Object.keys(sch.hours)
+            var courseDetail = courseNoToName(courseNames,sch.courseNo);
+            days.forEach(day => {
+                sch.hours[day].forEach(hour_no => {
+                    schedule[day].push({
+                        hour : hour_no,
+                        courseName : courseDetail.name,
+                        courseCode : courseDetail.courseCode
+                    })
+                })
+            })
+        })
+
+        res.json(schedule) 
+    } catch (Err) {
+        console.log("Error in fetching user courses ", Err.message)
+    }
+})
+// INPUT NEEDED : ROLL
+// SAMPLE RESPONSE
+// {
+//     "monday": [],
+//     "tuesday": [
+//       {
+//         "hour": 1,
+//         "courseName": "Data Science and Analytics Laboratory",
+//         "courseCode": "IT5611"
+//       },
+//       {
+//         "hour": 2,
+//         "courseName": "Data Science and Analytics Laboratory",
+//         "courseCode": "IT5611"
+//       },
+//       {
+//         "hour": 3,
+//         "courseName": "Data Science and Analytics Laboratory",
+//         "courseCode": "IT5611"
+//       },
+//       {
+//         "hour": 4,
+//         "courseName": "Data Science and Analytics Laboratory",
+//         "courseCode": "IT5611"
+//       }
+//     ],
+//     "wednesday": [
+//       {
+//         "hour": 3,
+//         "courseName": "Data Science and Analytics Theory",
+//         "courseCode": "IT5602"
+//       },
+//       {
+//         "hour": 4,
+//         "courseName": "Data Science and Analytics Theory",
+//         "courseCode": "IT5602"
+//       }
+//     ],
+//     "thursday": [
+//       {
+//         "hour": 6,
+//         "courseName": "Data Science and Analytics Theory",
+//         "courseCode": "IT5602"
+//       }
+//     ],
+//     "friday": []
+//   }
 
 export default router;
