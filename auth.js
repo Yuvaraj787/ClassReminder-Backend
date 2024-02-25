@@ -3,7 +3,7 @@ const router = Router()
 import Conn from "./dp_config.js";
 import Jwt from "jsonwebtoken"
 import { User } from "./models.js"; 
-
+import middleware from "./middleware.js"
 
 router.post("/register", async (req,res) => {
    
@@ -16,7 +16,7 @@ router.post("/register", async (req,res) => {
     console.log(existingUser);
     if (existingUser) {
         console.log("INFO: User already exit")
-        res.send({
+        res.json({
             success : false,
             newUser : true,
             error : false
@@ -27,7 +27,7 @@ router.post("/register", async (req,res) => {
     try {
         await newUser.save()
         console.log("SUCCCESS: User Registered")
-        res.send({
+        res.json({
             success: true,
             newUser: false,
             error: false
@@ -36,7 +36,7 @@ router.post("/register", async (req,res) => {
     } catch(err) {
         console.log("ERROR! Error in uploading userdata", err.message)
 
-        res.send({
+        res.json({
             success: false,
             newUser: false,
             error: true
@@ -44,10 +44,19 @@ router.post("/register", async (req,res) => {
     }
 })
 
+router.post("/verify", middleware, (req, res) => {
+    console.log("Sent success", req.roll);
+    res.json({
+        success : true,
+        roll: req.roll
+    })
+})
+
 router.post("/login", async (req,res) => {
     const rollno = req.query.roll;
     const password = req.query.password;
-    
+    console.log("Received");
+    console.log(rollno, password);
     var response = { // RESPONSE FORMAT
         wrongPassword : false,
         newUser : false,
