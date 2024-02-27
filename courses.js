@@ -6,9 +6,8 @@ const router = Router()
 
 router.get("/getAllCourses", async (req, res) => {
     var sem = 6 || req.query.sem
-    console.log(sem)
     var courses = await Course.find({ sem });
-    res.json(courses)
+    res.send(courses)
 })
 
 
@@ -118,8 +117,12 @@ router.get("/getMyCourses", async (req, res) => {
         var courseNames = await Course.find({
             courseNo: {
                 $in: userCourses
-            }
-        })
+            courseNo: {
+                    $in: userCourses
+                }
+            })
+
+        res.json(courseNames)
         console.log(courseNames)
         res.json(courseNames)
     } catch (Err) {
@@ -173,105 +176,121 @@ const courseNoToName = (courses, courseNo) => {
 
 router.get("/weeklyCourses", async (req, res) => {
 
-    var schedule = {
-        monday: [],
-        tuesday: [],
-        wednesday: [],
-        thursday: [],
-        friday: []
-    }
+    router.get("/weeklySchedule", middleware, async (req, res) => {
 
-    try {
-        const roll_no = 2021115125 || req.roll;
-        const courses = await User.findOne({
-            roll: roll_no
-        })
+        var schedule = {
+            monday: [],
+            tuesday: [],
+            wednesday: [],
+            thursday: [],
+            friday: []
+        }
+
+        try {
+            const roll_no = req.roll;
+            const courses = await User.findOne({
+                roll: roll_no
+            })
 
 
-        var userCourses = [];
+            console.log("1 - ", courses)
+            var userCourses = [];
 
-        courses.coursesEnrolled.forEach(element => {
-            userCourses.push(element[0])
-        });
+            courses.coursesEnrolled.forEach(element => {
+                userCourses.push(element[0])
+            });
 
-        var courseNames = await Course.find({
+            console.log("2 - ", userCourses)
+
+            var courseNames = await Course.find({
+                courseNo: {
+                    $in: userCourses
             courseNo: {
-                $in: userCourses
-            }
-        })
+                        $in: userCourses
+                    }
+                })
+
+            console.log("3 - ", courseNames)
 
 
-        var schedules = await Schedule.find({
+            var schedules = await Schedule.find({
+                courseNo: {
+                    $in: userCourses
             courseNo: {
-                $in: userCourses
-            }
-        })
+                        $in: userCourses
+                    }
+                })
 
-        schedules.forEach(sch => {
-            var days = Object.keys(sch.hours)
-            var courseDetail = courseNoToName(courseNames, sch.courseNo);
-            days.forEach(day => {
-                sch.hours[day].forEach(hour_no => {
-                    schedule[day].push({
-                        hour: hour_no,
-                        courseName: courseDetail.name,
-                        courseCode: courseDetail.courseCode
+            console.log("4 - ", schedules)
+
+            schedules.forEach(sch => {
+                var days = Object.keys(sch.hours)
+                var courseDetail = courseNoToName(courseNames, sch.courseNo);
+                var courseDetail = courseNoToName(courseNames, sch.courseNo);
+                days.forEach(day => {
+                    sch.hours[day].forEach(hour_no => {
+                        schedule[day].push({
+                            hour: hour_no,
+                            courseName: courseDetail.name,
+                            courseCode: courseDetail.courseCode,
+                            staff: courseDetail.staff
+                        })
                     })
                 })
             })
-        })
+            console.log("4 - ", schedule)
 
-        res.json(schedule)
-    } catch (Err) {
-        console.log("Error in fetching user courses ", Err.message)
-    }
-})
-// INPUT NEEDED : ROLL
-// SAMPLE RESPONSE
-// {
-//     "monday": [],
-//     "tuesday": [
-//       {
-//         "hour": 1,
-//         "courseName": "Data Science and Analytics Laboratory",
-//         "courseCode": "IT5611"
-//       },
-//       {
-//         "hour": 2,
-//         "courseName": "Data Science and Analytics Laboratory",
-//         "courseCode": "IT5611"
-//       },
-//       {
-//         "hour": 3,
-//         "courseName": "Data Science and Analytics Laboratory",
-//         "courseCode": "IT5611"
-//       },
-//       {
-//         "hour": 4,
-//         "courseName": "Data Science and Analytics Laboratory",
-//         "courseCode": "IT5611"
-//       }
-//     ],
-//     "wednesday": [
-//       {
-//         "hour": 3,
-//         "courseName": "Data Science and Analytics Theory",
-//         "courseCode": "IT5602"
-//       },
-//       {
-//         "hour": 4,
-//         "courseName": "Data Science and Analytics Theory",
-//         "courseCode": "IT5602"
-//       }
-//     ],
-//     "thursday": [
-//       {
-//         "hour": 6,
-//         "courseName": "Data Science and Analytics Theory",
-//         "courseCode": "IT5602"
-//       }
-//     ],
-//     "friday": []
-//   }
+            res.json(schedule)
+        } catch (Err) {
+            console.log("Error in fetching user courses ", Err.message)
+        }
+    })
+    // INPUT NEEDED : ROLL
+    // SAMPLE RESPONSE
+    // {
+    //     "monday": [],
+    //     "tuesday": [
+    //       {
+    //         "hour": 1,
+    //         "courseName": "Data Science and Analytics Laboratory",
+    //         "courseCode": "IT5611"
+    //       },
+    //       {
+    //         "hour": 2,
+    //         "courseName": "Data Science and Analytics Laboratory",
+    //         "courseCode": "IT5611"
+    //       },
+    //       {
+    //         "hour": 3,
+    //         "courseName": "Data Science and Analytics Laboratory",
+    //         "courseCode": "IT5611"
+    //       },
+    //       {
+    //         "hour": 4,
+    //         "courseName": "Data Science and Analytics Laboratory",
+    //         "courseCode": "IT5611"
+    //       }
+    //     ],
+    //     "wednesday": [
+    //       {
+    //         "hour": 3,
+    //         "courseName": "Data Science and Analytics Theory",
+    //         "courseCode": "IT5602"
+    //       },
+    //       {
+    //         "hour": 4,
+    //         "courseName": "Data Science and Analytics Theory",
+    //         "courseCode": "IT5602"
+    //       }
+    //     ],
+    //     "thursday": [
+    //       {
+    //         "hour": 6,
+    //         "courseName": "Data Science and Analytics Theory",
+    //         "courseCode": "IT5602"
+    //       }
+    //     ],
+    //     "friday": []
+    //   }
 
-export default router;
+    export default router;
