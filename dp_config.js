@@ -11,7 +11,7 @@ conn.on("connected", () => {
 })
 
 conn.on("disconnected", () => {
-    console.log("INFO: Connected to MongoDB")
+    console.log("INFO: disConnected to MongoDB")
 })
 
 conn.on("error", (err) => {

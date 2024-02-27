@@ -4,11 +4,13 @@ import { User, Course, Schedule } from "./models.js"
 
 const router = Router()
 
-router.get("/getAllCourses",    async (req,res) => {
+router.get("/getAllCourses", async (req, res) => {
     var sem = 6 || req.query.sem
-    var courses = await Course.find({sem});
-    res.send(courses)
+    console.log(sem)
+    var courses = await Course.find({ sem });
+    res.json(courses)
 })
+
 
 // INPUT NEEDED : SEM
 // SAMPLE OUTPUT / RESPONSE (LIST OF ALL COURSES)
@@ -42,11 +44,11 @@ router.get("/getAllCourses",    async (req,res) => {
 //     },
 // ]
 
-router.post("/getStaff", async (req, res) => {
-    const courseCode = "IT5613" || req.query.courseCode;
+router.get("/getStaff", async (req, res) => {
+    const courseCode = req.query.courseCode || "IT5613";
 
     const staffs = await Course.find({
-        courseCode  
+        courseCode
     })
 
     var TargetStaffs = [];
@@ -56,6 +58,7 @@ router.post("/getStaff", async (req, res) => {
     })
     res.json(TargetStaffs)
 })
+
 
 // INPUT NEEDED : COURSE_CODE
 // SAMPLE OUTPUT / RESPONSE
@@ -100,11 +103,12 @@ router.post("/enrollCourse", async (req, res) => {
 
 router.get("/getMyCourses", async (req, res) => {
     try {
-        const roll_no = 2021115125 || req.roll;
+        console.log(req.query)
+        const roll_no = 2021115125 || req.query.roll;
         const courses = await User.findOne({
             roll: roll_no
         })
-        console.log(courses)
+        //console.log(courses)
         var userCourses = [];
 
         courses.coursesEnrolled.forEach(element => {
@@ -112,16 +116,17 @@ router.get("/getMyCourses", async (req, res) => {
         });
 
         var courseNames = await Course.find({
-            courseNo : {
-                $in : userCourses
+            courseNo: {
+                $in: userCourses
             }
         })
-
-        res.json(courseNames) 
+        console.log(courseNames)
+        res.json(courseNames)
     } catch (Err) {
         console.log("Error in fetching user courses ", Err.message)
     }
 })
+
 // INPUT NEEDED : ROLL
 // SAMPLE OUTPUT / RESPONSE
 // [
@@ -145,7 +150,7 @@ router.get("/getMyCourses", async (req, res) => {
 //     }
 //   ]
 
-const courseNoToName = (courses,courseNo) => {
+const courseNoToName = (courses, courseNo) => {
     console.log("Input got : ", courses, courseNo)
     var found = false;
     var obj;
@@ -167,13 +172,13 @@ const courseNoToName = (courses,courseNo) => {
 }
 
 router.get("/weeklyCourses", async (req, res) => {
-    
+
     var schedule = {
-        monday : [],
-        tuesday : [],
-        wednesday : [],
-        thursday : [],
-        friday : []
+        monday: [],
+        tuesday: [],
+        wednesday: [],
+        thursday: [],
+        friday: []
     }
 
     try {
@@ -182,7 +187,7 @@ router.get("/weeklyCourses", async (req, res) => {
             roll: roll_no
         })
 
-        
+
         var userCourses = [];
 
         courses.coursesEnrolled.forEach(element => {
@@ -190,33 +195,33 @@ router.get("/weeklyCourses", async (req, res) => {
         });
 
         var courseNames = await Course.find({
-            courseNo : {
-                $in : userCourses
+            courseNo: {
+                $in: userCourses
             }
         })
 
 
         var schedules = await Schedule.find({
-            courseNo : {
-                $in : userCourses
+            courseNo: {
+                $in: userCourses
             }
         })
 
         schedules.forEach(sch => {
             var days = Object.keys(sch.hours)
-            var courseDetail = courseNoToName(courseNames,sch.courseNo);
+            var courseDetail = courseNoToName(courseNames, sch.courseNo);
             days.forEach(day => {
                 sch.hours[day].forEach(hour_no => {
                     schedule[day].push({
-                        hour : hour_no,
-                        courseName : courseDetail.name,
-                        courseCode : courseDetail.courseCode
+                        hour: hour_no,
+                        courseName: courseDetail.name,
+                        courseCode: courseDetail.courseCode
                     })
                 })
             })
         })
 
-        res.json(schedule) 
+        res.json(schedule)
     } catch (Err) {
         console.log("Error in fetching user courses ", Err.message)
     }
