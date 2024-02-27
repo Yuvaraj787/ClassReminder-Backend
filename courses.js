@@ -10,15 +10,18 @@ router.get("/getAllCourses", async (req, res) => {
         [
             {
                 $match: {
-                    sem: 6
+                  sem : 6
                 }
             },
             {
                 $group: {
-                    _id: {
-                        courseCode: "$courseCode",
-                        name: "$name"
-                    }
+                  _id: {
+                    courseCode : "$courseCode",
+                    name : "$name"
+                  },
+                  staffs : {
+                    $push: "$staff"
+                  }
                 }
             }
         ]
