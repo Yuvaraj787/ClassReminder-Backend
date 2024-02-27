@@ -4,9 +4,26 @@ import { User, Course, Schedule } from "./models.js"
 
 const router = Router()
 
-router.get("/getAllCourses",    async (req,res) => {
+router.get("/getAllCourses", async (req, res) => {
     var sem = 6 || req.query.sem
-    var courses = await Course.find({sem});
+    var courses = await Course.aggregate(
+        [
+            {
+                $match: {
+                    sem: 6
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        courseCode: "$courseCode",
+                        name: "$name"
+                    }
+                }
+            }
+        ]
+    );
+
     res.send(courses)
 })
 
@@ -46,7 +63,7 @@ router.post("/getStaff", async (req, res) => {
     const courseCode = "IT5613" || req.query.courseCode;
 
     const staffs = await Course.find({
-        courseCode  
+        courseCode
     })
 
     var TargetStaffs = [];
@@ -112,12 +129,12 @@ router.get("/getMyCourses", async (req, res) => {
         });
 
         var courseNames = await Course.find({
-            courseNo : {
-                $in : userCourses
+            courseNo: {
+                $in: userCourses
             }
         })
 
-        res.json(courseNames) 
+        res.json(courseNames)
     } catch (Err) {
         console.log("Error in fetching user courses ", Err.message)
     }
@@ -145,7 +162,7 @@ router.get("/getMyCourses", async (req, res) => {
 //     }
 //   ]
 
-const courseNoToName = (courses,courseNo) => {
+const courseNoToName = (courses, courseNo) => {
     console.log("Input got : ", courses, courseNo)
     var found = false;
     var obj;
@@ -166,57 +183,65 @@ const courseNoToName = (courses,courseNo) => {
     return -1;
 }
 
-router.get("/weeklyCourses", async (req, res) => {
-    
+router.get("/weeklySchedule", middleware, async (req, res) => {
+
     var schedule = {
-        monday : [],
-        tuesday : [],
-        wednesday : [],
-        thursday : [],
-        friday : []
+        monday: [],
+        tuesday: [],
+        wednesday: [],
+        thursday: [],
+        friday: []
     }
 
     try {
-        const roll_no = 2021115125 || req.roll;
+        const roll_no = req.roll;
         const courses = await User.findOne({
             roll: roll_no
         })
 
-        
+        console.log("1 - ", courses)
         var userCourses = [];
 
         courses.coursesEnrolled.forEach(element => {
             userCourses.push(element[0])
         });
 
+        console.log("2 - ", userCourses)
+
         var courseNames = await Course.find({
-            courseNo : {
-                $in : userCourses
+            courseNo: {
+                $in: userCourses
             }
         })
+
+        console.log("3 - ", courseNames)
 
 
         var schedules = await Schedule.find({
-            courseNo : {
-                $in : userCourses
+            courseNo: {
+                $in: userCourses
             }
         })
 
+        console.log("4 - ", schedules)
+
         schedules.forEach(sch => {
             var days = Object.keys(sch.hours)
-            var courseDetail = courseNoToName(courseNames,sch.courseNo);
+            var courseDetail = courseNoToName(courseNames, sch.courseNo);
             days.forEach(day => {
                 sch.hours[day].forEach(hour_no => {
                     schedule[day].push({
-                        hour : hour_no,
-                        courseName : courseDetail.name,
-                        courseCode : courseDetail.courseCode
+                        hour: hour_no,
+                        courseName: courseDetail.name,
+                        courseCode: courseDetail.courseCode,
+                        staff: courseDetail.staff
                     })
                 })
             })
         })
+        console.log("4 - ", schedule)
 
-        res.json(schedule) 
+        res.json({ schedule })
     } catch (Err) {
         console.log("Error in fetching user courses ", Err.message)
     }
