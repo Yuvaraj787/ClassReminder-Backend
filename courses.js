@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import middleware from "./middleware.js"
 import { User, Course, Schedule } from "./models.js"
+import axios from "axios"
 
 const router = Router()
 
@@ -201,7 +202,9 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
         tuesday: [],
         wednesday: [],
         thursday: [],
-        friday: []
+        friday: [],
+        saturday : [],
+        sunday : []
     }
 
     try {
@@ -260,6 +263,55 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
         console.log("Error in fetching user courses ", Err.message)
     }
 })
+
+router.get("/notifyEnrolledStudents", async (req, res) => {
+    const courseNo = 13 || req.query.courseNo
+    const users = await User.aggregate([
+        {
+            $unwind : "$coursesEnrolled"
+        },
+        {
+            $match : {
+                coursesEnrolled : courseNo
+            }
+        },
+        {
+            $group: {
+                _id : "$courseEnrolled",
+                students : {
+                    $push : "$roll"
+                }
+            }
+        }
+    ])
+    const usersArr = users[0].students
+    console.log(usersArr)
+    const rolls = []
+    usersArr.forEach(roll => {
+        rolls.push((roll + ""))
+    })
+    
+    console.log(rolls)
+    try {
+        await axios.post(`https://app.nativenotify.com/api/indie/group/notification`, {
+            subIDs: rolls,
+            appId: 19717,
+            appToken: '6cGVSWyXY5RoTiF9pUgfiS',
+            title: 'CLASS postponed! 😃',
+            message: 'Your IoT Class is postponed by selvi mam'
+        });
+        res.send({
+            success:  true
+        })
+    } catch (err) {
+        console.log("Error in sending notification about postponing of class : ", err.message);
+        res.send({
+            success:  false
+         })
+    }
+
+})
+
 // INPUT NEEDED : ROLL
 // SAMPLE RESPONSE
 // {
