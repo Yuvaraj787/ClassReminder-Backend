@@ -2,7 +2,7 @@ import { Router } from "express";
 const router = Router()
 import Conn from "./dp_config.js";
 import Jwt from "jsonwebtoken"
-import { User } from "./models.js"; 
+import { User, Faculty } from "./models.js"; 
 import middleware from "./middleware.js"
 
 router.post("/register", async (req,res) => {
@@ -87,6 +87,29 @@ router.post("/login", async (req,res) => {
         response.newUser = true;
         response.wrongPassword = true;
     }
+    res.json(response)
+})
+
+router.post("/staff/login", async (req, res) => {
+
+    const name = req.query.name
+    const password = req.query.password
+
+    var response = { // RESPONSE FORMAT
+        invalid : false,
+        name : name,
+        userData: {}
+    }
+
+    const target_staff = await Faculty.findOne({
+        name, password
+    }).exec()
+
+    if (target_staff) {
+        response.invalid = true
+        response.id = staff_id
+    }
+
     res.json(response)
 })
 

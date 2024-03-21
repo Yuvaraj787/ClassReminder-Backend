@@ -18,6 +18,12 @@ var courseScheme = mongoose.Schema({
     staff : String
 })
 
+var facultyScheme = mongoose.Schema({
+    id: Number,
+    name: String,
+    password: String
+})
+
 var scheduleSchema = mongoose.Schema({
     courseNo : Number,
     hours : Object
@@ -26,5 +32,5 @@ var scheduleSchema = mongoose.Schema({
 var User = mongoose.model("users", userSchema)
 var Course = mongoose.model("courses", courseScheme)
 var Schedule = mongoose.model("schedules", scheduleSchema)
-
-export { User, Course, Schedule }
+var Faculty = mongoose.model("faculties", facultyScheme)
+export { User, Course, Schedule, Faculty }

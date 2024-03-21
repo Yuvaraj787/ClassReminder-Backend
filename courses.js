@@ -88,10 +88,10 @@ router.get("/getStaff", async (req, res) => {
 //     "Geetha"
 // ]
 
-router.post("/enrollCourse", async (req, res) => {
-    const roll_no = 2021115125 || req.roll;
-    const courseCode = "IT5611" || req.query.courseCode;
-    const faculty = "Bama" || req.query.faculty;
+router.post("/enrollCourse", middleware, async (req, res) => {
+    const roll_no =  req.roll;
+    const courseCode = req.query.courseCode;
+    const faculty = req.query.faculty;
     try {
         const courseNo = await Course.findOne({
             courseCode, staff: faculty
@@ -125,7 +125,7 @@ router.post("/enrollCourse", async (req, res) => {
 router.get("/getMyCourses", async (req, res) => {
     try {
         console.log(req.query)
-        const roll_no = 2021115125 || req.query.roll;
+        const roll_no = req.query.roll;
         const courses = await User.findOne({
             roll: roll_no
         })
@@ -264,7 +264,10 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
 })
 
 router.get("/notifyEnrolledStudents", async (req, res) => {
-    const courseNo = 13 || req.query.courseNo
+    const courseNo = parseInt(req.query.courseNo)
+    const staffName = req.query.staffName
+    const {finalHour, finalDay, originalHour, subject} = req.query
+    console.log(req.query)
     const users = await User.aggregate([
         {
             $unwind : "$coursesEnrolled"
@@ -296,8 +299,8 @@ router.get("/notifyEnrolledStudents", async (req, res) => {
             subIDs: rolls,
             appId: 19717,
             appToken: '6cGVSWyXY5RoTiF9pUgfiS',
-            title: 'CLASS postponed! 😃',
-            message: 'Your IoT Class is postponed by selvi mam'
+            title: 'Class postponed! 😃',
+            message: `Your ${subject} class in ${originalHour} hour is postponed to ${finalDay} ${finalHour}th hour by ${staffName}`
         });
         res.send({
             success:  true
