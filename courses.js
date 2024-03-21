@@ -239,6 +239,7 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
 
         schedules.forEach(sch => {
             var days = Object.keys(sch.hours)
+            console.log(days)
             var courseDetail = courseNoToName(courseNames, sch.courseNo);
             var courseDetail = courseNoToName(courseNames, sch.courseNo);
             days.forEach(day => {
