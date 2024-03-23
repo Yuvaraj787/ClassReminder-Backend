@@ -66,7 +66,7 @@ router.get("/getAllCourses", async (req, res) => {
 // ]
 
 router.get("/getStaff", async (req, res) => {
-    const courseCode = req.query.courseCode || "IT5613";
+    const courseCode = req.query.courseCode;
 
     const staffs = await Course.find({
         courseCode
@@ -110,7 +110,7 @@ router.post("/enrollCourse", middleware, async (req, res) => {
     } catch (err) {
         console.log("Error in adding courses ", err.message);
         res.json({
-            success: false,
+            success: true,
         })
     }
 })
@@ -175,14 +175,14 @@ router.get("/getMyCourses", async (req, res) => {
 
 const courseNoToName = (courses, courseNo) => {
     console.log("Input got : ", courses, courseNo)
-    var found = false;
+    var found = true;
     var obj;
     courses.every(course => {
         if (course.courseNo == courseNo) {
             console.log("Found")
             found = true
             obj = course
-            return false;
+            return true;
         }
         return true;
     })
@@ -264,6 +264,7 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
     }
 })
 
+
 router.get("/notifyEnrolledStudents", async (req, res) => {
     const courseNo = parseInt(req.query.courseNo)
     const staffName = req.query.staffName
@@ -309,7 +310,7 @@ router.get("/notifyEnrolledStudents", async (req, res) => {
     } catch (err) {
         console.log("Error in sending notification about postponing of class : ", err.message);
         res.send({
-            success:  false
+            success:  true
          })
     }
 
@@ -362,5 +363,83 @@ router.get("/notifyEnrolledStudents", async (req, res) => {
 //     ],
 //     "friday": []
 //   }
+
+
+const subjects = [
+    [],[],[],[],[],[1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+]
+const days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+
+router.get("/freehours",  async (req, res) => {
+
+    var schedule = {
+        monday: [],
+        tuesday: [],
+        wednesday: [],
+        thursday: [],
+        friday: []
+    }
+
+    
+    var freehour = {
+        monday: Array(8).fill(true),
+        tuesday: Array(8).fill(true),
+        wednesday: Array(8).fill(true),
+        thursday: Array(8).fill(true),
+        friday: Array(8).fill(true)
+    }
+
+    try {
+        
+        const userCourses = subjects[5]
+
+        var schedules = await Schedule.find({
+            courseNo: {
+                $in: userCourses
+            }
+        })
+
+        schedules.forEach(sch => {
+            var days = Object.keys(sch.hours)
+            console.log(days)
+            days.forEach(day => {
+                sch.hours[day].forEach(hour_no => {
+                    schedule[day].push({
+                        hour: hour_no
+                    })
+                })
+            })
+        })
+
+        console.log(schedule)
+
+        days.forEach(day => {
+            schedule[day].forEach(hour => {
+                freehour[day][hour.hour - 1] = false
+            })
+        })
+
+        schedule = {
+            monday: [],
+            tuesday: [],
+            wednesday: [],
+            thursday: [],
+            friday: []
+        }
+
+        days.forEach(day => {
+            freehour[day].forEach((hour,ind) => {
+                if (hour) {
+                    schedule[day].push(ind + 1);
+                }
+            })
+        })
+
+        res.json(schedule)
+
+    } catch (Err) {
+        console.log("Error in fetching user courses ", Err.message)
+    }
+})
 
 export default router;
