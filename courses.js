@@ -89,9 +89,11 @@ router.get("/getStaff", async (req, res) => {
 // ]
 
 router.post("/enrollCourse", middleware, async (req, res) => {
-    const roll_no =  req.roll;
+    const roll_no = req.roll;
     const courseCode = req.query.courseCode;
     const faculty = req.query.faculty;
+    console.log(req.query)
+    console.log("hi")
     try {
         const courseNo = await Course.findOne({
             courseCode, staff: faculty
@@ -142,8 +144,6 @@ router.get("/getMyCourses", async (req, res) => {
             }
         })
 
-        res.json(courseNames)
-        console.log(courseNames)
         res.json(courseNames)
     } catch (Err) {
         console.log("Error in fetching user courses ", Err.message)
@@ -203,8 +203,8 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
         wednesday: [],
         thursday: [],
         friday: [],
-        saturday : [],
-        sunday : []
+        saturday: [],
+        sunday: []
     }
 
     try {
@@ -267,22 +267,22 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
 router.get("/notifyEnrolledStudents", async (req, res) => {
     const courseNo = parseInt(req.query.courseNo)
     const staffName = req.query.staffName
-    const {finalHour, finalDay, originalHour, subject} = req.query
+    const { finalHour, finalDay, originalHour, subject } = req.query
     console.log(req.query)
     const users = await User.aggregate([
         {
-            $unwind : "$coursesEnrolled"
+            $unwind: "$coursesEnrolled"
         },
         {
-            $match : {
-                coursesEnrolled : courseNo
+            $match: {
+                coursesEnrolled: courseNo
             }
         },
         {
             $group: {
-                _id : "$courseEnrolled",
-                students : {
-                    $push : "$roll"
+                _id: "$courseEnrolled",
+                students: {
+                    $push: "$roll"
                 }
             }
         }
@@ -293,7 +293,7 @@ router.get("/notifyEnrolledStudents", async (req, res) => {
     usersArr.forEach(roll => {
         rolls.push((roll + ""))
     })
-    
+
     console.log(rolls)
     try {
         await axios.post(`https://app.nativenotify.com/api/indie/group/notification`, {
@@ -304,13 +304,13 @@ router.get("/notifyEnrolledStudents", async (req, res) => {
             message: `Your ${subject} class in ${originalHour} hour is postponed to ${finalDay} ${finalHour}th hour by ${staffName}`
         });
         res.send({
-            success:  true
+            success: true
         })
     } catch (err) {
         console.log("Error in sending notification about postponing of class : ", err.message);
         res.send({
-            success:  false
-         })
+            success: false
+        })
     }
 
 })
@@ -362,5 +362,10 @@ router.get("/notifyEnrolledStudents", async (req, res) => {
 //     ],
 //     "friday": []
 //   }
+
+
+
+
+
 
 export default router;
