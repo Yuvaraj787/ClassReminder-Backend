@@ -75,7 +75,9 @@ router.get("/getSchedule", async (req, res) => {
                     hour: hour_no,
                     courseName: courseDetail.name,
                     courseCode: courseDetail.courseCode,
-                    staff: courseDetail.staff
+                    staff: courseDetail.staff,
+                    course_No: sch.courseNo
+
                 })
             })
         })
@@ -84,6 +86,27 @@ router.get("/getSchedule", async (req, res) => {
 
     res.json(schedule)
 
+})
+
+
+router.get("/getStudentsList", async (req, res) => {
+    console.log(req.query)
+
+    var students = await User.find({
+        coursesEnrolled: {
+            $in: parseInt(req.query.courseNo)
+        }
+    })
+    //console.log(students)
+    var StudentsList = students.sort((a, b) => a.roll - b.roll)
+    console.log(StudentsList)
+    res.json(StudentsList)
+
+})
+
+
+router.post("/submitAtt", async (req, res) => {
+    console.log(req.query)
 })
 
 export default router
