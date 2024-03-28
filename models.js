@@ -26,7 +26,8 @@ var facultyScheme = mongoose.Schema({
 
 var scheduleSchema = mongoose.Schema({
     courseNo : Number,
-    hours : Object
+    hours : Object,
+    location: String
 })
 
 var User = mongoose.model("users", userSchema)

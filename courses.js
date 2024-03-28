@@ -208,7 +208,7 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
     }
 
     try {
-        const roll_no = req.roll;
+        const roll_no =  req.roll;
         const courses = await User.findOne({
             roll: roll_no
         })
@@ -251,7 +251,8 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
                         hour: hour_no,
                         courseName: courseDetail.name,
                         courseCode: courseDetail.courseCode,
-                        staff: courseDetail.staff
+                        staff: courseDetail.staff,
+                        location: sch.location || ""
                     })
                 })
             })
@@ -264,6 +265,26 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
     }
 })
 
+
+router.get("/changeLocation", async (req, res) => {
+    const courseNo = req.query.courseNo;
+    const location = req.query.location;
+    try {
+        await Schedule.updateOne({
+            courseNo
+        },
+        {
+            $set: {
+                location: location
+            }
+        }
+        )
+        res.json({success: true})
+    } catch (err) {
+        console.log("Error in updating location : " + err.message)
+        res.json({success: false})
+    }
+})
 
 router.get("/notifyEnrolledStudents", async (req, res) => {
     const courseNo = parseInt(req.query.courseNo)
