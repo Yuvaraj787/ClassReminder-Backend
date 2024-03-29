@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import middleware from "./middleware.js"
-import { User, Course, Schedule } from "./models.js"
+import { User, Course, Schedule, Update } from "./models.js"
 import axios from "axios"
 
 const router = Router()
@@ -174,12 +174,10 @@ router.get("/getMyCourses", async (req, res) => {
 //   ]
 
 const courseNoToName = (courses, courseNo) => {
-    console.log("Input got : ", courses, courseNo)
     var found = true;
     var obj;
     courses.every(course => {
         if (course.courseNo == courseNo) {
-            console.log("Found")
             found = true
             obj = course
             return true;
@@ -187,15 +185,30 @@ const courseNoToName = (courses, courseNo) => {
         return true;
     })
     if (found) {
-        console.log("found")
         return obj
     }
-    console.log("not found")
     return -1;
 }
 
+const dayToNo = {
+    "monday": 1,
+    "tuesday": 2,
+    "wednesday": 3,
+    "thursday": 4,
+    "friday": 5
+};
 
-router.get("/weeklySchedule", middleware, async (req, res) => {
+Date.prototype.addDays = function (days) {
+    this.setDate(this.getDate() + parseInt(days));
+    return this;
+};
+
+Date.prototype.subDays = function (days) {
+    this.setDate(this.getDate() - parseInt(days));
+    return this;
+};
+
+router.get("/weeklySchedule", async (req, res) => {
 
     var schedule = {
         monday: [],
@@ -208,7 +221,7 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
     }
 
     try {
-        const roll_no =  req.roll;
+        const roll_no = req.roll || 2021115125;
         const courses = await User.findOne({
             roll: roll_no
         })
@@ -238,7 +251,6 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
             }
         })
 
-        console.log("4 - ", schedules)
 
         schedules.forEach(sch => {
             var days = Object.keys(sch.hours)
@@ -257,7 +269,62 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
                 })
             })
         })
+
         console.log("4 - ", schedule)
+
+        const curDayNo = new Date().getDay()
+        const startDay = curDayNo - 1;
+        const sDay = new Date()
+        const daysObj = {}
+        const daysArray = []
+        const days = ["sunday","monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+        
+        for (var i = 0; i < 7; i++) {
+            daysObj[sDay.toLocaleDateString()] = days[(curDayNo + i) % 7]
+            daysArray.push(sDay.toLocaleDateString())
+            sDay.addDays(1)
+        }
+
+        console.log(daysObj)
+        var updates = await Update.find({
+            date: {
+                $in: daysArray
+            }
+        }).exec()
+
+        var removables = []
+        var addables = []
+        updates.forEach((up, ind) => {
+            if (userCourses.includes(up.courseNo)) {
+                if (up.type == "minus") {
+                    removables.push({ day: daysObj[up.date], hour: up.hour })
+                } else {
+                    addables.push({
+                        day: daysObj[up.date],
+                        classData: {
+                            hour: up.hour,
+                            courseName: up.courseName,
+                            staff: up.staffName,
+                            location: "Postponed",
+                            courseCode: "Not given"
+                        }
+                    })
+                }
+            }
+        })
+
+        removables.forEach(rmData => {
+            console.log(rmData.day)
+            schedule[rmData.day] = schedule[rmData.day].filter(obData => {
+                return obData.hour != rmData.hour
+            })
+        })
+
+        addables.forEach(addData => {
+            schedule[addData.day].push(addData.classData)
+        })
+
+        console.log(updates)
 
         res.json(schedule)
     } catch (Err) {
@@ -270,27 +337,75 @@ router.get("/changeLocation", async (req, res) => {
     const courseNo = req.query.courseNo;
     const location = req.query.location;
     try {
-        await Schedule.updateOne({
+        const res1 = await Schedule.updateOne({
             courseNo
         },
-        {
-            $set: {
-                location: location
+            {
+                $set: {
+                    location: location
+                }
             }
-        }
         )
-        res.json({success: true})
+        console.log(res1)
+        res.json({ success: true })
     } catch (err) {
         console.log("Error in updating location : " + err.message)
-        res.json({success: false})
+        res.json({ success: false })
     }
 })
 
-router.get("/notifyEnrolledStudents", async (req, res) => {
+
+
+
+router.get("/postponeClass", async (req, res) => {
     const courseNo = parseInt(req.query.courseNo)
     console.log(courseNo)
     const staffName = req.query.staffName
-    const { finalHour, finalDay, originalHour, subject } = req.query
+    const { finalHour, finalDay, originalHour, subject, location } = req.query
+
+    const finDay = new Date()
+    var curDay = new Date()
+
+    var dayNo = curDay.getDay()
+    var finalDayNo = dayToNo[finalDay]
+    var add = 0;
+
+
+    if (finalDayNo < dayNo) {
+        add = (7 - dayNo) + finalDayNo
+    } else {
+        add = finalDayNo - dayNo
+    }
+
+    finDay.addDays(add)
+
+    var minusDateString = curDay.toLocaleDateString()
+    var plusDateString = finDay.toLocaleDateString()
+
+
+    console.log("Source : ", minusDateString, "\n", "Destination : ", plusDateString)
+
+    const minusUpdate = new Update({
+        date: minusDateString,
+        type: "minus",
+        courseName: subject,
+        staffName,
+        hour: originalHour,
+        courseNo
+    })
+
+    const plusUpdate = new Update({
+        date: plusDateString,
+        type: "plus",
+        courseName: subject,
+        staffName,
+        hour: finalHour,
+        location,
+        courseNo
+    })
+
+    await Update.insertMany([minusUpdate, plusUpdate])
+
     console.log(req.query)
     const users = await User.aggregate([
         {
@@ -390,10 +505,11 @@ router.get("/notifyEnrolledStudents", async (req, res) => {
 const subjects = [
     [], [], [], [], [], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 ]
-const days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+
+const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"]
 
 router.get("/freehours", async (req, res) => {
-
+    console.log("free hours requested")
     var schedule = {
         monday: [],
         tuesday: [],
@@ -435,7 +551,7 @@ router.get("/freehours", async (req, res) => {
 
         console.log(schedule)
 
-        days.forEach(day => {
+        weekdays.forEach(day => {
             schedule[day].forEach(hour => {
                 freehour[day][hour.hour - 1] = false
             })
@@ -449,12 +565,51 @@ router.get("/freehours", async (req, res) => {
             friday: []
         }
 
-        days.forEach(day => {
+        weekdays.forEach(day => {
             freehour[day].forEach((hour, ind) => {
                 if (hour) {
                     schedule[day].push(ind + 1);
                 }
             })
+        })
+
+        const curDayNo = new Date().getDay()
+        const startDay = curDayNo - 1;
+        const sDay = new Date()
+        const daysObj = {}
+        const daysArray = []
+        const days = ["sunday","monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+        
+        for (var i = 0; i < 7; i++) {
+            daysObj[sDay.toLocaleDateString()] = days[(curDayNo + i) % 7]
+            daysArray.push(sDay.toLocaleDateString())
+            sDay.addDays(1)
+        }
+
+        console.log(daysObj)
+        var updates = await Update.find({
+            date: {
+                $in: daysArray
+            }
+        }).exec()
+
+        var removables = []
+        var addables = []
+
+        updates.forEach((up, ind) => {
+            if (up.type == "plus") {
+                removables.push({ day: daysObj[up.date], hour: up.hour })
+            } else {
+                addables.push({ day: daysObj[up.date], hour: up.hour })
+            }
+        })
+
+        removables.forEach(rmData => {
+            schedule[rmData.day] = schedule[rmData.day].filter(hour => hour != rmData.hour)
+        })
+
+        addables.forEach(addData => {
+            schedule[addData.day].push(addData.hour)
         })
 
         res.json(schedule)
