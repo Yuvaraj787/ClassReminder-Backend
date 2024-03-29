@@ -30,8 +30,19 @@ var scheduleSchema = mongoose.Schema({
     location: String
 })
 
+var attendaceScheme = mongoose.Schema({
+    date: String,
+    hour : Number,
+    staffName : String,
+    courseNo: Number,
+    rollNo : Number,
+    isPresent: Boolean
+})
+
 var User = mongoose.model("users", userSchema)
 var Course = mongoose.model("courses", courseScheme)
 var Schedule = mongoose.model("schedules", scheduleSchema)
 var Faculty = mongoose.model("faculties", facultyScheme)
-export { User, Course, Schedule, Faculty }
+var Attendance = mongoose.model("attendance", attendaceScheme)
+
+export { User, Course, Schedule, Faculty, Attendance }

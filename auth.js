@@ -6,9 +6,8 @@ import { User, Faculty } from "./models.js"
 import middleware from "./middleware.js"
 
 router.post("/register", async (req,res) => {
-   
+    console.log("got it")
     const userDetails = req.query
-    console.log("received")
     console.log(req.query);
     const existingUser = await User.findOne({
         roll: userDetails.roll
