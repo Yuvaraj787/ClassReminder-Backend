@@ -48,6 +48,6 @@ app.get("/shi", async (req, res) => {
     res.send({ ok: true });
 })
 
-app.listen(port, () => {
+app.listen(process.env.PORT || port, () => {
     console.log("Server is listening on port : " + port)
 })
