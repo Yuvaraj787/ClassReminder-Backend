@@ -4,10 +4,13 @@ import AuthRoutes from "./auth.js"
 import CourseRoutes from "./courses.js"
 import Attendance from "./att.js"
 import Conn from "./dp_config.js";
+import cors from "cors"
 const app = Express()
 const port = 3000
 import axios from "axios";
 app.use(bodyParser.urlencoded({ extended: true }))
+
+app.use(cors())
 
 app.use("/auth", AuthRoutes)
 app.use("/user", CourseRoutes)
@@ -48,6 +51,6 @@ app.get("/shi", async (req, res) => {
     res.send({ ok: true });
 })
 
-app.listen(port, () => {
+app.listen(process.env.PORT || port, () => {
     console.log("Server is listening on port : " + port)
 })

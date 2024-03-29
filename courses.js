@@ -252,7 +252,7 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
                         courseName: courseDetail.name,
                         courseCode: courseDetail.courseCode,
                         staff: courseDetail.staff,
-                        location: sch.location || ""
+                        location: sch.location || "KP 406"
                     })
                 })
             })
@@ -288,6 +288,7 @@ router.get("/changeLocation", async (req, res) => {
 
 router.get("/notifyEnrolledStudents", async (req, res) => {
     const courseNo = parseInt(req.query.courseNo)
+    console.log(courseNo)
     const staffName = req.query.staffName
     const { finalHour, finalDay, originalHour, subject } = req.query
     console.log(req.query)
@@ -309,8 +310,8 @@ router.get("/notifyEnrolledStudents", async (req, res) => {
             }
         }
     ])
+    console.log(users)
     const usersArr = users[0].students
-    console.log(usersArr)
     const rolls = []
     usersArr.forEach(roll => {
         rolls.push((roll + ""))

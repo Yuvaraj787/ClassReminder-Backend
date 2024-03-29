@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import middleware from "./middleware.js"
-import { User, Course, Schedule, Faculty } from "./models.js"
+import { User, Course, Schedule, Faculty, Attendance } from "./models.js"
 import axios from "axios"
 
 const router = Router()
@@ -106,7 +106,17 @@ router.get("/getStudentsList", async (req, res) => {
 
 
 router.post("/submitAtt", async (req, res) => {
+    var {Date, course_No, isPresentArray, Atthour, StaffName } = req.query
     console.log(req.query)
+    var dataArr = [];
+    Object.keys(isPresentArray).forEach(stud => {
+        dataArr.push({
+            date: Date, hour: Atthour, staffName: StaffName, roll: stud, isPresent: isPresentArray[stud]    
+        })
+    })
+    await Attendance.insertMany(dataArr)
+    console.log(dataArr)
+    res.json({success : true})
 })
 
 export default router
