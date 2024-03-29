@@ -76,7 +76,8 @@ router.get("/getSchedule", async (req, res) => {
                     courseName: courseDetail.name,
                     courseCode: courseDetail.courseCode,
                     staff: courseDetail.staff,
-                    course_No: sch.courseNo
+                    course_No: sch.courseNo,
+                    location: sch.location
 
                 })
             })
@@ -106,17 +107,30 @@ router.get("/getStudentsList", async (req, res) => {
 
 
 router.post("/submitAtt", async (req, res) => {
-    var {Date, course_No, isPresentArray, Atthour, StaffName } = req.query
+    var { Date, course_No, isPresentArray, Atthour, StaffName } = req.query
     console.log(req.query)
     var dataArr = [];
     Object.keys(isPresentArray).forEach(stud => {
         dataArr.push({
-            date: Date, hour: Atthour, staffName: StaffName, roll: stud, isPresent: isPresentArray[stud]    
+            courseNo: course_No, date: Date, hour: Atthour, staffName: StaffName, rollNo: stud, isPresent: isPresentArray[stud]
         })
     })
     await Attendance.insertMany(dataArr)
     console.log(dataArr)
-    res.json({success : true})
+    res.json({ success: true })
+})
+
+
+router.get("/getAtt", async (req, res) => {
+    var { roll, courseNo } = req.query
+    console.log(courseNo)
+    courseNo = parseInt(courseNo)
+    const arr = await Attendance.find({
+        rollNo: roll,
+        courseNo
+    })
+    console.log(arr)
+    res.json(arr)
 })
 
 export default router

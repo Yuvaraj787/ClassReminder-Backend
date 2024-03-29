@@ -208,7 +208,7 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
     }
 
     try {
-        const roll_no =  req.roll;
+        const roll_no = req.roll;
         const courses = await User.findOne({
             roll: roll_no
         })
@@ -267,31 +267,34 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
 
 
 router.get("/changeLocation", async (req, res) => {
-    const courseNo = req.query.courseNo;
-    const location = req.query.location;
+    const courseNo = parseInt(req.query.courseNo);
+    const newVenue = req.query.newLocation;
+    const oldVenue = req.query.oldVenue;
+    const staffName = req.query.staffName;
+    const subject = req.query.subject;
+
+
+    console.log(req.query)
+    //console.log(courseNo + "," + location)
+    //to update the location
     try {
         await Schedule.updateOne({
             courseNo
         },
-        {
-            $set: {
-                location: location
+            {
+                $set: {
+                    location: newVenue
+                }
             }
-        }
         )
-        res.json({success: true})
+        res.json({ success: true })
     } catch (err) {
         console.log("Error in updating location : " + err.message)
-        res.json({success: false})
+        res.json({ success: false })
     }
-})
 
-router.get("/notifyEnrolledStudents", async (req, res) => {
-    const courseNo = parseInt(req.query.courseNo)
-    console.log(courseNo)
-    const staffName = req.query.staffName
-    const { finalHour, finalDay, originalHour, subject } = req.query
-    console.log(req.query)
+    //to send notification to the enrolled students
+
     const users = await User.aggregate([
         {
             $unwind: "$coursesEnrolled"
@@ -318,12 +321,69 @@ router.get("/notifyEnrolledStudents", async (req, res) => {
     })
 
     console.log(rolls)
+
     try {
         await axios.post(`https://app.nativenotify.com/api/indie/group/notification`, {
             subIDs: rolls,
             appId: 19717,
             appToken: '6cGVSWyXY5RoTiF9pUgfiS',
-            title: 'Class postponed! 😃',
+            title: '📍Venue Changed ! ',
+            message: `${staffName} Changed the venue of ${subject} from ${oldVenue} to ${newVenue}`
+        });
+        res.send({
+            success: true
+        })
+    } catch (err) {
+        console.log("Error in sending notification about postponing of class : ", err.message);
+        res.send({
+            success: true
+        })
+    }
+
+
+})
+
+
+router.get("/notifyEnrolledStudents", async (req, res) => {
+    const courseNo = parseInt(req.query.courseNo)
+    console.log(courseNo)
+    const staffName = req.query.staffName
+    const { finalHour, finalDay, originalHour, subject } = req.query
+    console.log(req.query)
+
+    const users = await User.aggregate([
+        {
+            $unwind: "$coursesEnrolled"
+        },
+        {
+            $match: {
+                coursesEnrolled: courseNo
+            }
+        },
+        {
+            $group: {
+                _id: "$courseEnrolled",
+                students: {
+                    $push: "$roll"
+                }
+            }
+        }
+    ])
+    console.log(users)
+    const usersArr = users[0].students
+    const rolls = []
+    usersArr.forEach(roll => {
+        rolls.push((roll + ""))
+    })
+
+    console.log(rolls)
+
+    try {
+        await axios.post(`https://app.nativenotify.com/api/indie/group/notification`, {
+            subIDs: rolls,
+            appId: 19717,
+            appToken: '6cGVSWyXY5RoTiF9pUgfiS',
+            title: '📌 Class postponed! 😃',
             message: `Your ${subject} class in ${originalHour} hour is postponed to ${finalDay} ${finalHour}th hour by ${staffName}`
         });
         res.send({
@@ -337,6 +397,9 @@ router.get("/notifyEnrolledStudents", async (req, res) => {
     }
 
 })
+
+
+
 
 // INPUT NEEDED : ROLL
 // SAMPLE RESPONSE
