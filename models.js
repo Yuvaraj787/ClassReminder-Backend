@@ -1,5 +1,5 @@
 import Conn from "./dp_config.js"
-import mongoose from "mongoose"
+import mongoose, { mongo } from "mongoose"
 
 var userSchema = mongoose.Schema({
     roll : {type: "Number", required : true},
@@ -39,10 +39,21 @@ var attendaceScheme = mongoose.Schema({
     isPresent: Boolean
 })
 
+var updatesScheme = mongoose.Schema({
+    date: String,
+    hour: Number,
+    staffName : String,
+    courseName : String,
+    Location: String,
+    type : String,
+    courseNo: Number
+})
+
 var User = mongoose.model("users", userSchema)
 var Course = mongoose.model("courses", courseScheme)
 var Schedule = mongoose.model("schedules", scheduleSchema)
 var Faculty = mongoose.model("faculties", facultyScheme)
 var Attendance = mongoose.model("attendance", attendaceScheme)
+var Update = mongoose.model("Updates", updatesScheme)
 
-export { User, Course, Schedule, Faculty, Attendance }
+export { User, Course, Schedule, Faculty, Attendance, Update }
