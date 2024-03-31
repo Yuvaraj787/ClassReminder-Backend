@@ -6,29 +6,34 @@ import axios from "axios"
 const router = Router()
 
 router.get("/getAllCourses", async (req, res) => {
-    var sem = 6 || req.query.sem
-    var courses = await Course.aggregate(
-        [
-            {
-                $match: {
-                    sem: 6
-                }
-            },
-            {
-                $group: {
-                    _id: {
-                        courseCode: "$courseCode",
-                        name: "$name"
-                    },
-                    staffs: {
-                        $push: "$staff"
+    try {
+        var sem = 6 || req.query.sem
+        var courses = await Course.aggregate(
+            [
+                {
+                    $match: {
+                        sem: 6
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            courseCode: "$courseCode",
+                            name: "$name"
+                        },
+                        staffs: {
+                            $push: "$staff"
+                        }
                     }
                 }
-            }
-        ]
-    );
+            ]
+        );
 
-    res.send(courses)
+        res.send(courses)
+    } catch (err) {
+        console.log("Error catched : " + err.message)
+        res.json({ catchError: true })
+    }
 })
 
 
@@ -66,18 +71,23 @@ router.get("/getAllCourses", async (req, res) => {
 // ]
 
 router.get("/getStaff", async (req, res) => {
-    const courseCode = req.query.courseCode;
+    try {
+        const courseCode = req.query.courseCode;
 
-    const staffs = await Course.find({
-        courseCode
-    })
+        const staffs = await Course.find({
+            courseCode
+        })
 
-    var TargetStaffs = [];
+        var TargetStaffs = [];
 
-    staffs.forEach(staff => {
-        TargetStaffs.push(staff.staff)
-    })
-    res.json(TargetStaffs)
+        staffs.forEach(staff => {
+            TargetStaffs.push(staff.staff)
+        })
+        res.json(TargetStaffs)
+    } catch (err) {
+        console.log("Error catched : " + err.message)
+        res.json({ catchError: true })
+    }
 })
 
 
@@ -89,12 +99,13 @@ router.get("/getStaff", async (req, res) => {
 // ]
 
 router.post("/enrollCourse", middleware, async (req, res) => {
+    try {
+    
     const roll_no = req.roll;
     const courseCode = req.query.courseCode;
     const faculty = req.query.faculty;
     console.log(req.query)
     console.log("hi")
-    try {
         const courseNo = await Course.findOne({
             courseCode, staff: faculty
         }).exec()
@@ -112,7 +123,7 @@ router.post("/enrollCourse", middleware, async (req, res) => {
     } catch (err) {
         console.log("Error in adding courses ", err.message);
         res.json({
-            success: true,
+            success: false,
         })
     }
 })
@@ -147,7 +158,7 @@ router.get("/getMyCourses", async (req, res) => {
         res.json(courseNames)
     } catch (Err) {
         console.log("Error in fetching user courses for choices ", Err.message)
-        res.json({catchError: true})
+        res.json({ catchError: true })
     }
 })
 
@@ -330,11 +341,13 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
         res.json(schedule)
     } catch (Err) {
         console.log("Error in fetching user courses of students ", Err.message)
+        res.json({catchError: true})
     }
 })
 
 
 router.get("/changeLocation", async (req, res) => {
+    try {
     const courseNo = parseInt(req.query.courseNo);
     const newVenue = req.query.newLocation;
     const oldVenue = req.query.oldVenue;
@@ -345,7 +358,6 @@ router.get("/changeLocation", async (req, res) => {
     console.log(req.query)
     //console.log(courseNo + "," + location)
     //to update the location
-    try {
         const res1 = await Schedule.updateOne({
             courseNo
         },
@@ -362,6 +374,7 @@ router.get("/changeLocation", async (req, res) => {
     }
 
 
+    try {
     const users = await User.aggregate([
         {
             $unwind: "$coursesEnrolled"
@@ -388,8 +401,6 @@ router.get("/changeLocation", async (req, res) => {
     })
 
     console.log(rolls)
-
-    try {
         await axios.post("https://app.nativenotify.com/api/indie/group/notification", {
             subIDs: rolls,
             appId: 19717,
@@ -403,11 +414,9 @@ router.get("/changeLocation", async (req, res) => {
     } catch (err) {
         console.log("Error in sending notification about venue Change : ", err.message);
         res.send({
-            success: true
+            notifyError: true
         })
     }
-
-
 })
 
 
@@ -415,6 +424,7 @@ router.get("/changeLocation", async (req, res) => {
 
 
 router.get("/postponeClass", async (req, res) => {
+    try {
     const courseNo = parseInt(req.query.courseNo)
     console.log(courseNo)
     const staffName = req.query.staffName
@@ -492,7 +502,6 @@ router.get("/postponeClass", async (req, res) => {
 
     console.log(rolls)
 
-    try {
         await axios.post(`https://app.nativenotify.com/api/indie/group/notification`, {
             subIDs: rolls,
             appId: 19717,
@@ -506,7 +515,7 @@ router.get("/postponeClass", async (req, res) => {
     } catch (err) {
         console.log("Error in sending notification about postponing of class : ", err.message);
         res.send({
-            success: true
+            success: false
         })
     }
 
@@ -571,7 +580,6 @@ const subjects = [
 const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"]
 
 router.get("/freehours", async (req, res) => {
-    console.log("free hours requested")
     var schedule = {
         monday: [],
         tuesday: [],
