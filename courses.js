@@ -131,7 +131,7 @@ router.get("/getMyCourses", async (req, res) => {
         const courses = await User.findOne({
             roll: roll_no
         })
-        //console.log(courses)
+        console.log(courses)
         var userCourses = [];
 
         courses.coursesEnrolled.forEach(element => {
@@ -359,6 +359,54 @@ router.get("/changeLocation", async (req, res) => {
         console.log("Error in updating location : " + err.message)
         res.json({ success: false })
     }
+
+
+    const users = await User.aggregate([
+        {
+            $unwind: "$coursesEnrolled"
+        },
+        {
+            $match: {
+                coursesEnrolled: courseNo
+            }
+        },
+        {
+            $group: {
+                _id: "$courseEnrolled",
+                students: {
+                    $push: "$roll"
+                }
+            }
+        }
+    ])
+    console.log(users)
+    const usersArr = users[0].students
+    const rolls = []
+    usersArr.forEach(roll => {
+        rolls.push((roll + ""))
+    })
+
+    console.log(rolls)
+
+    try {
+        await axios.post(`https://app.nativenotify.com/api/indie/group/notification`, {
+            subIDs: rolls,
+            appId: 19717,
+            appToken: '6cGVSWyXY5RoTiF9pUgfiS',
+            title: '📍 Venue Changed!',
+            message: `${staffName} changed the venue of ${subject} from ${oldVenue} to ${newVenue}`
+        });
+        res.send({
+            success: true
+        })
+    } catch (err) {
+        console.log("Error in sending notification about venue Change : ", err.message);
+        res.send({
+            success: true
+        })
+    }
+
+
 })
 
 

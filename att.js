@@ -4,7 +4,8 @@ import { User, Course, Schedule, Faculty, Attendance, Update } from "./models.js
 import axios from "axios"
 
 const router = Router()
-
+//const ExcelJS = require('exceljs');
+import ExcelJS from 'exceljs'
 
 router.get("/getSchedule", async (req, res) => {
     console.log("received req")
@@ -198,14 +199,55 @@ router.get("/getStudentAttendance", async (req, res) => {
     res.json(arr)
 })
 
-router.get("/getStudentAttendance", async (req, res) => {
-    var { roll, courseNo } = req.query
-    courseNo = parseInt(courseNo)
-    const arr = await Attendance.find({
-        rollNo: roll,
-        courseNo
-    })
-    res.json(arr)
-})
+// router.get("/downloadAtt", async (req, res) => {
+//     console.log("download requested")
+//     try {
+
+//     }
+//     catch (err) {
+//         console.log("Error : " + err.message)
+//     }
+// })
+
+
+// router.get('/downloadAtt', async (req, res) => {
+//     try {
+//         // Fetch data from your database
+//         const data = await fetchDataFromDatabase();
+//         console.log("hi")
+//         // Create a new Excel workbook
+//         const workbook = new ExcelJS.Workbook();
+//         const worksheet = workbook.addWorksheet('Sheet 1');
+
+//         // Populate data into the worksheet
+//         data.forEach((row) => {
+//             worksheet.addRow(row);
+//         });
+//         // console.log(data)
+//         // Set response headers for Excel file
+//         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+//         res.setHeader('Content-Disposition', 'attachment; filename="data.xlsx"');
+//         //console.log(res)
+//         // Write the workbook to response
+//         await workbook.xlsx.write(res);
+
+//     } catch (error) {
+//         console.error('Error generating Excel file:', error);
+//         res.status(500).send('Internal Server Error');
+//     }
+// });
+
+// Function to fetch data from the database (replace with your actual database query)
+async function fetchDataFromDatabase() {
+    // Example data
+    return [
+        ['Name', 'Age'],
+        ['John', 30],
+        ['Alice', 25],
+        ['Bob', 35]
+    ];
+}
+
+
 
 export default router
