@@ -146,7 +146,7 @@ router.get("/getMyCourses", async (req, res) => {
 
         res.json(courseNames)
     } catch (Err) {
-        console.log("Error in fetching user courses ", Err.message)
+        console.log("Error in fetching user courses for choices ", Err.message)
     }
 })
 
@@ -208,7 +208,7 @@ Date.prototype.subDays = function (days) {
     return this;
 };
 
-router.get("/weeklySchedule", async (req, res) => {
+router.get("/weeklySchedule", middleware, async (req, res) => {
 
     var schedule = {
         monday: [],
@@ -328,7 +328,7 @@ router.get("/weeklySchedule", async (req, res) => {
 
         res.json(schedule)
     } catch (Err) {
-        console.log("Error in fetching user courses ", Err.message)
+        console.log("Error in fetching user courses of students ", Err.message)
     }
 })
 
@@ -359,7 +359,56 @@ router.get("/changeLocation", async (req, res) => {
         console.log("Error in updating location : " + err.message)
         res.json({ success: false })
     }
+
+
+    const users = await User.aggregate([
+        {
+            $unwind: "$coursesEnrolled"
+        },
+        {
+            $match: {
+                coursesEnrolled: courseNo
+            }
+        },
+        {
+            $group: {
+                _id: "$courseEnrolled",
+                students: {
+                    $push: "$roll"
+                }
+            }
+        }
+    ])
+    console.log(users)
+    const usersArr = users[0].students
+    const rolls = []
+    usersArr.forEach(roll => {
+        rolls.push((roll + ""))
+    })
+
+    console.log(rolls)
+
+    try {
+        await axios.post("https://app.nativenotify.com/api/indie/group/notification", {
+            subIDs: rolls,
+            appId: 19717,
+            appToken: '6cGVSWyXY5RoTiF9pUgfiS',
+            title: '📍 Venue Changed!',
+            message: '${staffName} changed the venue of ${subject} from ${oldVenue} to ${newVenue}'
+        });
+        res.send({
+            success: true
+        })
+    } catch (err) {
+        console.log("Error in sending notification about venue Change : ", err.message);
+        res.send({
+            success: true
+        })
+    }
+
+
 })
+
 
 
 
@@ -627,7 +676,7 @@ router.get("/freehours", async (req, res) => {
         res.json(schedule)
 
     } catch (Err) {
-        console.log("Error in fetching user courses ", Err.message)
+        console.log("Error in fetching user courses to fetch free hours", Err.message)
     }
 })
 

@@ -47,7 +47,8 @@ router.post("/verify", middleware, (req, res) => {
     console.log("Sent success", req.roll);
     res.json({
         success : true,
-        roll: req.roll
+        roll: req.roll,
+        isFaculty : req.isFaculty
     })
 })
 
@@ -75,7 +76,8 @@ router.post("/login", async (req,res) => {
             response.newUser = false;
             response.wrongPassword = false;
             response.token = Jwt.sign({
-                roll: rollno
+                roll: rollno,
+                isFaculty : false
             },"test123",{   expiresIn : (60 * 60) * 60    })
             response.userData = target_user
         } else {
@@ -99,6 +101,7 @@ router.post("/staff/login", async (req, res) => {
     var response = { // RESPONSE FORMAT
         invalid : true,
         name : name,
+        token : "",
         userData: {}
     }
 
@@ -110,6 +113,10 @@ router.post("/staff/login", async (req, res) => {
     
     if (target_staff) {
         console.log("valid")
+        response.token = Jwt.sign({
+            roll: name,
+            isFaculty : true
+        },"test123",{   expiresIn : (60 * 60) * 60    })
         response.invalid = false
         response.id = target_staff.staff_id
     }

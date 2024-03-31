@@ -137,7 +137,7 @@ router.get("/getSchedule", async (req, res) => {
     addables.forEach(addData => {
         schedule[addData.day].push(addData.classData)
     })
-
+    console.log("get schedule success")
     res.json(schedule)
 })
 
@@ -198,14 +198,5 @@ router.get("/getStudentAttendance", async (req, res) => {
     res.json(arr)
 })
 
-router.get("/getStudentAttendance", async (req, res) => {
-    var { roll, courseNo } = req.query
-    courseNo = parseInt(courseNo)
-    const arr = await Attendance.find({
-        rollNo: roll,
-        courseNo
-    })
-    res.json(arr)
-})
 
 export default router
