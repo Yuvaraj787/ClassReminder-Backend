@@ -146,7 +146,8 @@ router.get("/getMyCourses", async (req, res) => {
 
         res.json(courseNames)
     } catch (Err) {
-        console.log("Error in fetching user courses ", Err.message)
+        console.log("Error in fetching user courses for choices ", Err.message)
+        res.json({ catchError: true })
     }
 })
 
@@ -208,7 +209,7 @@ Date.prototype.subDays = function (days) {
     return this;
 };
 
-router.get("/weeklySchedule", async (req, res) => {
+router.get("/weeklySchedule", middleware, async (req, res) => {
 
     var schedule = {
         monday: [],
@@ -328,7 +329,7 @@ router.get("/weeklySchedule", async (req, res) => {
 
         res.json(schedule)
     } catch (Err) {
-        console.log("Error in fetching user courses ", Err.message)
+        console.log("Error in fetching user courses of students ", Err.message)
     }
 })
 
@@ -408,6 +409,7 @@ router.get("/changeLocation", async (req, res) => {
 
 
 })
+
 
 
 
@@ -675,7 +677,7 @@ router.get("/freehours", async (req, res) => {
         res.json(schedule)
 
     } catch (Err) {
-        console.log("Error in fetching user courses ", Err.message)
+        console.log("Error in fetching user courses to fetch free hours", Err.message)
     }
 })
 

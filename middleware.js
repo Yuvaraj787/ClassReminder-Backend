@@ -5,9 +5,11 @@ const verifyToken = (req, res, next) => {
     console.log("token verification going on")
     const token = req.query.token;
     try {
-        const roll_no = Jwt.verify(token, "test123").roll;
-        req.roll = roll_no
-        if (roll_no) {
+        const decoded = Jwt.verify(token, "test123");
+        req.roll = decoded.roll
+        req.isFaculty = decoded.isFaculty
+        console.log(decoded)
+        if (req.roll) {
             console.log("SUCCESS: Token Verication")
             next();
         } else {
