@@ -44,14 +44,19 @@ const sendNotification = async () => {
 //     console.log("checking")
 // }, 60 * 500)
 
-app.get("/shi", async (req, res) => {
+app.get("/check", async (req, res) => {
+    try {
     console.log("ok");
 
-    console.log("notify status : ", data.data)
+    console.log("notify status : ", req.query)
     res.send({ ok: true });
+    } catch (err) {
+        console.log("Error catched : " + err.message)
+    }
 })
 
 
-app.listen(port, () => {
-    console.log("Hey, Server is listening on port : " + port)
+const server = app.listen(port, () => {
+    const { address, port } = server.address();
+    console.log(`Hey, Server is listening on ${address}:${port}`)
 })
