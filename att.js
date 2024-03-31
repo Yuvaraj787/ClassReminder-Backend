@@ -199,7 +199,6 @@ router.get("/getStudentAttendance", async (req, res) => {
     res.json(arr)
 })
 
-<<<<<<< HEAD
 // router.get("/downloadAtt", async (req, res) => {
 //     console.log("download requested")
 //     try {
@@ -250,7 +249,5 @@ async function fetchDataFromDatabase() {
 }
 
 
-=======
->>>>>>> 9c4eb3d9a01cbc5d34585b75f75f91e41ec847f5
 
 export default router

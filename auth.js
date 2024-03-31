@@ -5,7 +5,7 @@ import Jwt from "jsonwebtoken"
 import { User, Faculty } from "./models.js"
 import middleware from "./middleware.js"
 
-router.post("/register", async (req,res) => {
+router.post("/register", async (req, res) => {
     console.log("got it")
     const userDetails = req.query
     console.log(req.query);
@@ -16,9 +16,9 @@ router.post("/register", async (req,res) => {
     if (existingUser) {
         console.log("INFO: User already exit")
         res.json({
-            success : false,
-            newUser : true,
-            error : false
+            success: false,
+            newUser: true,
+            error: false
         })
         return;
     }
@@ -31,8 +31,8 @@ router.post("/register", async (req,res) => {
             newUser: false,
             error: false
         })
-        
-    } catch(err) {
+
+    } catch (err) {
         console.log("ERROR! Error in uploading userdata", err.message)
 
         res.json({
@@ -46,21 +46,21 @@ router.post("/register", async (req,res) => {
 router.post("/verify", middleware, (req, res) => {
     console.log("Sent success", req.roll);
     res.json({
-        success : true,
+        success: true,
         roll: req.roll,
-        isFaculty : req.isFaculty
+        isFaculty: req.isFaculty
     })
 })
 
-router.post("/login", async (req,res) => {
+router.post("/login", async (req, res) => {
     const rollno = req.query.roll;
     const password = req.query.password;
     console.log("Received");
     console.log(rollno, password);
     var response = { // RESPONSE FORMAT
-        wrongPassword : false,
-        newUser : false,
-        error : false,
+        wrongPassword: false,
+        newUser: false,
+        error: false,
         token: "",
         userData: {}
     }
@@ -68,7 +68,7 @@ router.post("/login", async (req,res) => {
     const target_user = await User.findOne({
         roll: rollno,
     }).exec()
-    
+
     console.log(target_user);
 
     if (target_user) {
@@ -77,8 +77,8 @@ router.post("/login", async (req,res) => {
             response.wrongPassword = false;
             response.token = Jwt.sign({
                 roll: rollno,
-                isFaculty : false
-            },"test123",{   expiresIn : (60 * 60) * 60    })
+                isFaculty: false
+            }, "test123", { expiresIn: (60 * 60) * 60 })
             response.userData = target_user
         } else {
             response.newUser = false;
@@ -99,24 +99,24 @@ router.post("/staff/login", async (req, res) => {
     console.log("staff login triggered")
     console.log(name, password)
     var response = { // RESPONSE FORMAT
-        invalid : true,
-        name : name,
-        token : "",
+        invalid: true,
+        name: name,
+        token: "",
         userData: {}
     }
 
     const target_staff = await Faculty.findOne({
-        name,password
+        name, password
     }).exec()
 
     console.log(target_staff)
-    
+
     if (target_staff) {
         console.log("valid")
         response.token = Jwt.sign({
             roll: name,
-            isFaculty : true
-        },"test123",{   expiresIn : (60 * 60) * 60    })
+            isFaculty: true
+        }, "test123", { expiresIn: (60 * 60) * 60 })
         response.invalid = false
         response.id = target_staff.staff_id
     }
@@ -124,4 +124,21 @@ router.post("/staff/login", async (req, res) => {
     res.json(response)
 })
 
+router.post("/changePw", async (req, res) => {
+    const roll = req.query.roll
+    const pw = req.query.password
+    const staff = req.query.staff
+    const name = req.query.name
+
+    if (staff) {
+
+
+
+    }
+    else {
+
+
+    }
+
+})
 export default router;
