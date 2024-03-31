@@ -6,7 +6,7 @@ import Attendance from "./att.js"
 import Conn from "./dp_config.js";
 import cors from "cors"
 const app = Express()
-const port = 3000
+const port = process.env.PORT || 3000;
 import axios from "axios";
 app.use(bodyParser.urlencoded({ extended: true }))
 
@@ -51,6 +51,7 @@ app.get("/shi", async (req, res) => {
     res.send({ ok: true });
 })
 
-app.listen(process.env.PORT || port, () => {
-    console.log("Server is listening on port : " + port)
+
+app.listen(port, () => {
+    console.log("Hey, Server is listening on port : " + port)
 })

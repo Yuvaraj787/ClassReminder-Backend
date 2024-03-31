@@ -147,6 +147,7 @@ router.get("/getMyCourses", async (req, res) => {
         res.json(courseNames)
     } catch (Err) {
         console.log("Error in fetching user courses for choices ", Err.message)
+        res.json({catchError: true})
     }
 })
 
