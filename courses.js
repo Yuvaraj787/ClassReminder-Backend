@@ -100,12 +100,12 @@ router.get("/getStaff", async (req, res) => {
 
 router.post("/enrollCourse", middleware, async (req, res) => {
     try {
-    
-    const roll_no = req.roll;
-    const courseCode = req.query.courseCode;
-    const faculty = req.query.faculty;
-    console.log(req.query)
-    console.log("hi")
+
+        const roll_no = req.roll;
+        const courseCode = req.query.courseCode;
+        const faculty = req.query.faculty;
+        console.log(req.query)
+        console.log("hi")
         const courseNo = await Course.findOne({
             courseCode, staff: faculty
         }).exec()
@@ -341,23 +341,23 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
         res.json(schedule)
     } catch (Err) {
         console.log("Error in fetching user courses of students ", Err.message)
-        res.json({catchError: true})
+        res.json({ catchError: true })
     }
 })
 
 
 router.get("/changeLocation", async (req, res) => {
     try {
-    const courseNo = parseInt(req.query.courseNo);
-    const newVenue = req.query.newLocation;
-    const oldVenue = req.query.oldVenue;
-    const staffName = req.query.staffName;
-    const subject = req.query.subject;
+        const courseNo = parseInt(req.query.courseNo);
+        const newVenue = req.query.newLocation;
+        const oldVenue = req.query.oldVenue;
+        const staffName = req.query.staffName;
+        const subject = req.query.subject;
 
 
-    console.log(req.query)
-    //console.log(courseNo + "," + location)
-    //to update the location
+        console.log(req.query)
+        //console.log(courseNo + "," + location)
+        //to update the location
         const res1 = await Schedule.updateOne({
             courseNo
         },
@@ -375,32 +375,32 @@ router.get("/changeLocation", async (req, res) => {
 
 
     try {
-    const users = await User.aggregate([
-        {
-            $unwind: "$coursesEnrolled"
-        },
-        {
-            $match: {
-                coursesEnrolled: courseNo
-            }
-        },
-        {
-            $group: {
-                _id: "$courseEnrolled",
-                students: {
-                    $push: "$roll"
+        const users = await User.aggregate([
+            {
+                $unwind: "$coursesEnrolled"
+            },
+            {
+                $match: {
+                    coursesEnrolled: courseNo
+                }
+            },
+            {
+                $group: {
+                    _id: "$courseEnrolled",
+                    students: {
+                        $push: "$roll"
+                    }
                 }
             }
-        }
-    ])
-    console.log(users)
-    const usersArr = users[0].students
-    const rolls = []
-    usersArr.forEach(roll => {
-        rolls.push((roll + ""))
-    })
+        ])
+        console.log(users)
+        const usersArr = users[0].students
+        const rolls = []
+        usersArr.forEach(roll => {
+            rolls.push((roll + ""))
+        })
 
-    console.log(rolls)
+        console.log(rolls)
         await axios.post("https://app.nativenotify.com/api/indie/group/notification", {
             subIDs: rolls,
             appId: 19717,
@@ -420,87 +420,150 @@ router.get("/changeLocation", async (req, res) => {
 })
 
 
+router.get("/cancelClass", async (req, res) => {
+    try {
+        const courseNo = parseInt(req.query.courseNo)
+        const { hour, subject, staffName } = req.query
 
+        const curDay = new Date()
+        var minusDateString = curDay.toLocaleDateString()
+
+        const minusUpdate = new Update({
+            date: minusDateString,
+            type: "minus",
+            courseName: subject,
+            staffName,
+            hour,
+            courseNo
+        })
+
+        await minusUpdate.save()
+
+        const users = await User.aggregate([
+            {
+                $unwind: "$coursesEnrolled"
+            },
+            {
+                $match: {
+                    coursesEnrolled: courseNo
+                }
+            },
+            {
+                $group: {
+                    _id: "$courseEnrolled",
+                    students: {
+                        $push: "$roll"
+                    }
+                }
+            }
+        ])
+        console.log(users)
+        const usersArr = users[0].students
+        const rolls = []
+        usersArr.forEach(roll => {
+            rolls.push((roll + ""))
+        })
+
+        console.log(rolls)
+
+        await axios.post(`https://app.nativenotify.com/api/indie/group/notification`, {
+            subIDs: rolls,
+            appId: 19717,
+            appToken: '6cGVSWyXY5RoTiF9pUgfiS',
+            title: 'Class  Cancelled',
+            message: `Your ${subject} class in ${hour} hour is cancelled by Faculty ${staffName}`
+        })
+
+        res.send({
+            success: true
+        })
+
+    } catch (err) {
+        console.log("Error catched : " + err.message)
+        res.json({ catchError: true })
+    }
+
+})
 
 
 router.get("/postponeClass", async (req, res) => {
     try {
-    const courseNo = parseInt(req.query.courseNo)
-    console.log(courseNo)
-    const staffName = req.query.staffName
-    const { finalHour, finalDay, originalHour, subject, location } = req.query
+        const courseNo = parseInt(req.query.courseNo)
+        console.log(courseNo)
+        const staffName = req.query.staffName
+        const { finalHour, finalDay, originalHour, subject, location } = req.query
 
-    const finDay = new Date()
-    var curDay = new Date()
+        const finDay = new Date()
+        var curDay = new Date()
 
-    var dayNo = curDay.getDay()
-    var finalDayNo = dayToNo[finalDay]
-    var add = 0;
-
-
-    if (finalDayNo < dayNo) {
-        add = (7 - dayNo) + finalDayNo
-    } else {
-        add = finalDayNo - dayNo
-    }
-
-    finDay.addDays(add)
-
-    var minusDateString = curDay.toLocaleDateString()
-    var plusDateString = finDay.toLocaleDateString()
+        var dayNo = curDay.getDay()
+        var finalDayNo = dayToNo[finalDay]
+        var add = 0;
 
 
-    console.log("Source : ", minusDateString, "\n", "Destination : ", plusDateString)
+        if (finalDayNo < dayNo) {
+            add = (7 - dayNo) + finalDayNo
+        } else {
+            add = finalDayNo - dayNo
+        }
 
-    const minusUpdate = new Update({
-        date: minusDateString,
-        type: "minus",
-        courseName: subject,
-        staffName,
-        hour: originalHour,
-        courseNo
-    })
+        finDay.addDays(add)
 
-    const plusUpdate = new Update({
-        date: plusDateString,
-        type: "plus",
-        courseName: subject,
-        staffName,
-        hour: finalHour,
-        location,
-        courseNo
-    })
+        var minusDateString = curDay.toLocaleDateString()
+        var plusDateString = finDay.toLocaleDateString()
 
-    await Update.insertMany([minusUpdate, plusUpdate])
 
-    console.log(req.query)
+        console.log("Source : ", minusDateString, "\n", "Destination : ", plusDateString)
 
-    const users = await User.aggregate([
-        {
-            $unwind: "$coursesEnrolled"
-        },
-        {
-            $match: {
-                coursesEnrolled: courseNo
-            }
-        },
-        {
-            $group: {
-                _id: "$courseEnrolled",
-                students: {
-                    $push: "$roll"
+        const minusUpdate = new Update({
+            date: minusDateString,
+            type: "minus",
+            courseName: subject,
+            staffName,
+            hour: originalHour,
+            courseNo
+        })
+
+        const plusUpdate = new Update({
+            date: plusDateString,
+            type: "plus",
+            courseName: subject,
+            staffName,
+            hour: finalHour,
+            location,
+            courseNo
+        })
+
+        await Update.insertMany([minusUpdate, plusUpdate])
+
+        console.log(req.query)
+
+        const users = await User.aggregate([
+            {
+                $unwind: "$coursesEnrolled"
+            },
+            {
+                $match: {
+                    coursesEnrolled: courseNo
+                }
+            },
+            {
+                $group: {
+                    _id: "$courseEnrolled",
+                    students: {
+                        $push: "$roll"
+                    }
                 }
             }
-        }
-    ])
-    console.log(users)
-    const usersArr = users[0].students
-    const rolls = []
-    usersArr.forEach(roll => {
-        rolls.push((roll + ""))
-    })
+        ])
+        console.log(users)
+        const usersArr = users[0].students
+        const rolls = []
+        usersArr.forEach(roll => {
+            rolls.push((roll + ""))
+        })
 
-    console.log(rolls)
+        console.log(rolls)
 
         await axios.post(`https://app.nativenotify.com/api/indie/group/notification`, {
             subIDs: rolls,
@@ -651,12 +714,15 @@ router.get("/freehours", async (req, res) => {
         const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
 
         for (var i = 0; i < 7; i++) {
+            if (sDay.getDay() == 0 || sDay.getDay() == 6) {
+                sDay.addDays(1);
+                continue;
+            }
             daysObj[sDay.toLocaleDateString()] = days[(curDayNo + i) % 7]
             daysArray.push(sDay.toLocaleDateString())
             sDay.addDays(1)
         }
 
-        console.log(daysObj)
         var updates = await Update.find({
             date: {
                 $in: daysArray
@@ -673,7 +739,6 @@ router.get("/freehours", async (req, res) => {
                 addables.push({ day: daysObj[up.date], hour: up.hour })
             }
         })
-
         removables.forEach(rmData => {
             schedule[rmData.day] = schedule[rmData.day].filter(hour => hour != rmData.hour)
         })
