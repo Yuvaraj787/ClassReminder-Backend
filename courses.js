@@ -1,9 +1,14 @@
 import { Router } from 'express';
 import middleware from "./middleware.js"
-import { User, Course, Schedule, Update } from "./models.js"
+import { User, Course, Schedule, Update, Info } from "./models.js"
 import axios from "axios"
 
 const router = Router()
+
+const currentDate = new Date();
+const currentMonth = currentDate.toLocaleString('default', { month: 'short' });
+const currentDay = currentDate.getDate();
+
 
 router.get("/getAllCourses", async (req, res) => {
     try {
@@ -143,6 +148,8 @@ router.get("/getMyCourses", async (req, res) => {
             roll: roll_no
         })
         console.log(courses)
+
+
         var userCourses = [];
 
         courses.coursesEnrolled.forEach(element => {
@@ -348,13 +355,14 @@ router.get("/weeklySchedule", middleware, async (req, res) => {
 
 
 router.get("/changeLocation", async (req, res) => {
-    try {
-        const courseNo = parseInt(req.query.courseNo);
-        const newVenue = req.query.newLocation;
-        const oldVenue = req.query.oldVenue;
-        const staffName = req.query.staffName;
-        const subject = req.query.subject;
+    const courseNo = parseInt(req.query.courseNo);
+    const newVenue = req.query.newLocation;
+    const oldVenue = req.query.oldVenue;
+    const staffName = req.query.staffName;
+    const subject = req.query.subject;
 
+    const rolls = []
+    try {
 
         console.log(req.query)
         //console.log(courseNo + "," + location)
@@ -396,7 +404,7 @@ router.get("/changeLocation", async (req, res) => {
         ])
         console.log(users)
         const usersArr = users[0].students
-        const rolls = []
+
         usersArr.forEach(roll => {
             rolls.push((roll + ""))
         })
@@ -406,13 +414,27 @@ router.get("/changeLocation", async (req, res) => {
         console.log("Error in sending notification about venue Change : ", err.message);
     }
     try {
+        const info = '📍 Venue Changed!'
+        const detail = `${staffName} changed the venue of ${subject} from ${oldVenue} to ${newVenue}`
+
         await axios.post("https://app.nativenotify.com/api/indie/group/notification", {
             subIDs: rolls,
             appId: 19717,
             appToken: '6cGVSWyXY5RoTiF9pUgfiS',
-            title: '📍 Venue Changed!',
-            message: '${staffName} changed the venue of ${subject} from ${oldVenue} to ${newVenue}'
+            title: info,
+            message: detail
         });
+
+        var newInfo = new Info({
+            staff: staffName,
+            info: info,
+            details: detail,
+            date: currentDay.toString(),
+            month: currentMonth
+        })
+
+        newInfo.save()
+
         res.send({
             success: true
         })
@@ -508,13 +530,23 @@ router.get("/postponeClass", async (req, res) => {
         })
 
         console.log(rolls)
+        const info = '📌 Class postponed! 😃'
+        const detail = `Your ${subject} class in ${originalHour} hour is postponed to ${finalDay} ${finalHour}th hour by ${staffName}`
+        var newInfo = new Info({
+            staff: staffName,
+            info: info,
+            details: detail,
+            date: currentDay.toString(),
+            month: currentMonth
+        })
+        await newInfo.save()
 
         await axios.post(`https://app.nativenotify.com/api/indie/group/notification`, {
             subIDs: rolls,
             appId: 19717,
             appToken: '6cGVSWyXY5RoTiF9pUgfiS',
-            title: '📌 Class postponed! 😃',
-            message: `Your ${subject} class in ${originalHour} hour is postponed to ${finalDay} ${finalHour}th hour by ${staffName}`
+            title: info,
+            message: detail
         });
         res.send({
             success: true
@@ -527,8 +559,6 @@ router.get("/postponeClass", async (req, res) => {
     }
 
 })
-
-
 
 
 // INPUT NEEDED : ROLL
