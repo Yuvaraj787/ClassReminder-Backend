@@ -8,6 +8,7 @@ import cors from "cors"
 const app = Express()
 const port = process.env.PORT || 3000;
 import axios from "axios";
+
 app.use(bodyParser.urlencoded({ extended: true }))
 
 app.use(cors())
@@ -39,17 +40,13 @@ const sendNotification = async () => {
 }
 
 
-// setInterval(() => {
-//     sendNotification();
-//     console.log("checking")
-// }, 60 * 500)
 
 app.get("/check", async (req, res) => {
     try {
-    console.log("ok");
+        console.log("ok");
 
-    console.log("notify status : ", req.query)
-    res.send({ ok: true });
+        console.log("notify status : ", req.query)
+        res.send({ ok: true });
     } catch (err) {
         console.log("Error catched : " + err.message)
     }

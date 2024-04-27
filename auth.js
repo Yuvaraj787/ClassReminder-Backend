@@ -138,4 +138,21 @@ router.post("/staff/login", async (req, res) => {
     }
 })
 
+router.post("/changePw", async (req, res) => {
+    const roll = req.query.roll
+    const pw = req.query.password
+    const staff = req.query.staff
+    const name = req.query.name
+
+    if (staff) {
+
+
+
+    }
+    else {
+
+
+    }
+
+})
 export default router;

@@ -142,7 +142,7 @@ router.get("/getMyCourses", async (req, res) => {
         const courses = await User.findOne({
             roll: roll_no
         })
-        //console.log(courses)
+        console.log(courses)
         var userCourses = [];
 
         courses.coursesEnrolled.forEach(element => {
@@ -158,6 +158,7 @@ router.get("/getMyCourses", async (req, res) => {
         res.json(courseNames)
     } catch (Err) {
         console.log("Error in fetching user courses for choices ", Err.message)
+        res.json({ catchError: true })
         res.json({ catchError: true })
     }
 })
@@ -401,6 +402,10 @@ router.get("/changeLocation", async (req, res) => {
         })
 
         console.log(rolls)
+    } catch (err) {
+        console.log("Error in sending notification about venue Change : ", err.message);
+    }
+    try {
         await axios.post("https://app.nativenotify.com/api/indie/group/notification", {
             subIDs: rolls,
             appId: 19717,
@@ -417,6 +422,8 @@ router.get("/changeLocation", async (req, res) => {
             notifyError: true
         })
     }
+
+
 })
 
 
@@ -499,6 +506,9 @@ router.get("/postponeClass", async (req, res) => {
         var dayNo = curDay.getDay()
         var finalDayNo = dayToNo[finalDay]
         var add = 0;
+        var dayNo = curDay.getDay()
+        var finalDayNo = dayToNo[finalDay]
+        var add = 0;
 
 
         if (finalDayNo < dayNo) {
@@ -515,14 +525,14 @@ router.get("/postponeClass", async (req, res) => {
 
         console.log("Source : ", minusDateString, "\n", "Destination : ", plusDateString)
 
-        const minusUpdate = new Update({
-            date: minusDateString,
-            type: "minus",
-            courseName: subject,
-            staffName,
-            hour: originalHour,
-            courseNo
-        })
+            const minusUpdate = new Update({
+                date: minusDateString,
+                type: "minus",
+                courseName: subject,
+                staffName,
+                hour: originalHour,
+                courseNo
+            })
 
         const plusUpdate = new Update({
             date: plusDateString,
