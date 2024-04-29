@@ -25,6 +25,7 @@ router.post("/register", async (req, res) => {
         }
         const newUser = new User(userDetails)
         await newUser.save()
+
         console.log("SUCCCESS: User Registered")
         res.json({
             success: true,
@@ -139,20 +140,53 @@ router.post("/staff/login", async (req, res) => {
 })
 
 router.post("/changePw", async (req, res) => {
-    const roll = req.query.roll
-    const pw = req.query.password
+    const rollNum = req.query.roll
+    const pw = req.query.passWord
     const staff = req.query.staff
     const name = req.query.name
+    console.log(rollNum + " " + pw + " " + name)
+    if (!rollNum) {
 
-    if (staff) {
-
-
+        try {
+            const user = await Faculty.findOneAndUpdate(
+                { name: name },
+                { $set: { password: pw } },
+                { new: true }
+            );
+            console.log(user);
+            if (user) {
+                console.log("Updated successfully");
+                res.send({ sucess: true })
+            } else {
+                console.log("Failed to update");
+                res.send({ sucess: false })
+            }
+        } catch (err) {
+            console.error("Error:", err);
+        }
 
     }
     else {
-
+        try {
+            const user = await User.findOneAndUpdate(
+                { roll: rollNum },
+                { $set: { password: pw } },
+                { new: true }
+            );
+            console.log(user);
+            if (user) {
+                console.log("Updated successfully");
+                res.send({ sucess: true })
+            } else {
+                console.log("Failed to update");
+                res.send({ sucess: false })
+            }
+        } catch (err) {
+            console.error("Error:", err);
+        }
 
     }
+
 
 })
 export default router;

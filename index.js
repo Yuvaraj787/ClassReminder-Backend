@@ -3,6 +3,8 @@ import bodyParser from "body-parser"
 import AuthRoutes from "./auth.js"
 import CourseRoutes from "./courses.js"
 import Attendance from "./att.js"
+import Info from "./info.js"
+
 import Conn from "./dp_config.js";
 import cors from "cors"
 const app = Express()
@@ -16,6 +18,8 @@ app.use(cors())
 app.use("/auth", AuthRoutes)
 app.use("/user", CourseRoutes)
 app.use("/att", Attendance)
+app.use("/info", Info)
+
 // app.get("/login", (req,res) => {
 //     res.send("<h1>Yeah It's Working</h1>");
 // })
