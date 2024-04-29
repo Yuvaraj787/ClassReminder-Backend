@@ -4,6 +4,8 @@ import Conn from "./dp_config.js";
 import Jwt from "jsonwebtoken"
 import { User, Faculty } from "./models.js"
 import middleware from "./middleware.js"
+import bcrypt from 'bcrypt';
+
 
 router.post("/register", async (req, res) => {
     try {
@@ -14,6 +16,7 @@ router.post("/register", async (req, res) => {
             roll: userDetails.roll
         }).exec()
         console.log(existingUser);
+
         if (existingUser) {
             console.log("INFO: User already exit")
             res.json({
@@ -23,9 +26,24 @@ router.post("/register", async (req, res) => {
             })
             return;
         }
+
+        const password = userDetails.password
+        const saltRounds = 10;
+        const salt = await bcrypt.genSalt(saltRounds);
+
+
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        //console.log(match)
+        userDetails.password = hashedPassword
+
+        console.log(hashedPassword)
         const newUser = new User(userDetails)
         await newUser.save()
 
+        const match = await bcrypt.compare(password, hashedPassword);
+        //if (target_user.password == password) {
+        console.log(match)
         console.log("SUCCCESS: User Registered")
         res.json({
             success: true,
@@ -43,6 +61,7 @@ router.post("/register", async (req, res) => {
         })
     }
 })
+
 
 router.post("/verify", middleware, (req, res) => {
     try {
@@ -79,7 +98,11 @@ router.post("/login", async (req, res) => {
         console.log(target_user);
 
         if (target_user) {
-            if (target_user.password == password) {
+            // console.log(target_user.password)
+            const match = await bcrypt.compare(password, target_user.password);
+            //if (target_user.password == password) {
+            console.log(match)
+            if (match) {
                 response.newUser = false;
                 response.wrongPassword = false;
                 response.token = Jwt.sign({
